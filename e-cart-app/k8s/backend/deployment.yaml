@@ -1,0 +1,38 @@
+# ==========================================
+# Backend Deployment (Workload)
+# ==========================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 2         # Example: Running 2 copies for high availability
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        # IMPORTANT: 'imagePullPolicy: Never' tells K8s to look for the image LOCALLY.
+        # This is strictly for local dev (Minikube/Docker Desktop).
+        # In production, you would push to a registry (Docker Hub/ECR) and remove this.
+        image: e-cart-app-backend:latest 
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        # Connecting to other services via their K8s Service names
+        - name: DB_HOST
+          value: "postgres" # Resolves to ClusterIP of Postgres Service
+        - name: DB_USER
+          value: "user"
+        - name: DB_PASSWORD
+          value: "password"
+        - name: DB_NAME
+          value: "ecart"
+        - name: KAFKA_BROKER
+          value: "kafka:9092"

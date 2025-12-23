@@ -1,0 +1,17 @@
+# ==========================================
+# Frontend Service (External Access)
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  # NodePort opens a specific port on the Node (your computer)
+  # so you can access the app from outside the cluster.
+  type: NodePort      
+  ports:
+  - port: 80          # The Service listens on port 80 internally
+    targetPort: 80    # The Container listens on port 80
+    nodePort: 30007   # YOU access it at http://localhost:30007
+  selector:
+    app: frontend

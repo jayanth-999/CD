@@ -1,0 +1,54 @@
+# ==========================================
+# Postgres Kubernetes Manifest
+# ==========================================
+
+# ------------------------------------------
+# 1. Service (Networking)
+# ------------------------------------------
+# A Service provides a stable IP address and DNS name for a set of Pods.
+# Even if the Postgres Pod dies and restarts (getting a new IP),
+# other apps can always reach it at 'postgres-service:5432'.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres      # DNS name will be 'postgres' (e.g., backend connects to 'postgres')
+spec:
+  ports:
+  - port: 5432        # The port the Service listens on
+    targetPort: 5432  # The port the Container is listening on
+  selector:
+    app: postgres     # Traffic is sent to any Pod with label 'app: postgres'
+
+---
+
+# ------------------------------------------
+# 2. Deployment (Workload)
+# ------------------------------------------
+# A Deployment manages the state of our Pods.
+# It ensures that even if a node fails, K8s restarts the Pod elsewhere.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1         # We only want 1 instance of the DB
+  selector:
+    matchLabels:
+      app: postgres   # Must match the Service selector above
+  template:
+    metadata:
+      labels:
+        app: postgres # The label that identifies this Pod
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:          # Environment variables for configuration
+        - name: POSTGRES_USER
+          value: "user"
+        - name: POSTGRES_PASSWORD
+          value: "password"
+        - name: POSTGRES_DB
+          value: "ecart"

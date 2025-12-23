@@ -1,0 +1,14 @@
+# ==========================================
+# Backend Service (Networking)
+# ==========================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  type: ClusterIP     # Internal only. The frontend (running in cluster) can reach it.
+  ports:
+  - port: 3000        # Service Port
+    targetPort: 3000  # Container Port
+  selector:
+    app: backend

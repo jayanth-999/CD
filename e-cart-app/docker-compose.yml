@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Infrastructure Services (DB & Kafka)
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecart-postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ecart
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecart-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: ecart-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - ecart-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: ecart-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # We expose two listeners:
+      # 1. PLAINTEXT: Internal docker network communication (kafka:29092)
+      # 2. PLAINTEXT_HOST: External localhost communication (localhost:9092)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - ecart-network
+
+  # ==========================================
+  # Application Services
+  # ==========================================
+  backend:
+    build: ./backend
+    container_name: ecart-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=ecart
+      - KAFKA_BROKER=kafka:29092
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - ecart-network
+
+  frontend:
+    build: ./frontend
+    container_name: ecart-frontend
+    ports:
+      - "5173:80" # Map host 5173 to container 80 (Nginx)
+    depends_on:
+      - backend
+    networks:
+      - ecart-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ecart-network:
+    driver: bridge
