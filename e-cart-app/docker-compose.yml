@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   # ==========================================
@@ -15,6 +15,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d ecart"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - ecart-network
 
@@ -46,6 +51,12 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     networks:
       - ecart-network
 
@@ -54,9 +65,8 @@ services:
   # ==========================================
   backend:
     build: ./backend
-    container_name: ecart-backend
-    ports:
-      - "3000:3000"
+    # ports:
+    # - "3000:3000"
     environment:
       - DB_HOST=postgres
       - DB_USER=user
@@ -64,8 +74,10 @@ services:
       - DB_NAME=ecart
       - KAFKA_BROKER=kafka:29092
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     networks:
       - ecart-network
 
