@@ -12,6 +12,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres      # DNS name will be 'postgres' (e.g., backend connects to 'postgres')
+  namespace: ecart
 spec:
   ports:
   - port: 5432        # The port the Service listens on

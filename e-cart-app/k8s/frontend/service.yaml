@@ -5,6 +5,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: frontend
+  namespace: ecart
 spec:
   # NodePort opens a specific port on the Node (your computer)
   # so you can access the app from outside the cluster.

@@ -5,6 +5,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
+  namespace: ecart 
 spec:
   replicas: 2         # Example: Running 2 copies for high availability
   selector:
@@ -36,3 +37,8 @@ spec:
           value: "ecart"
         - name: KAFKA_BROKER
           value: "kafka:9092"
+
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 3000
