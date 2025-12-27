@@ -37,8 +37,9 @@ spec:
           value: "ecart"
         - name: KAFKA_BROKER
           value: "kafka:9092"
-
-      livenessProbe:
-        httpGet:
-          path: /health
-          port: 3000
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10

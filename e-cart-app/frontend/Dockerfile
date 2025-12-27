@@ -33,8 +33,12 @@ FROM nginx:alpine
 # Copy the build output from the 'build' stage to Nginx's html folder
 COPY --from=build /app/dist /usr/share/nginx/html
 
+# Copy custom Nginx configuration to proxy /api to backend
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 # Expose port 80 (standard web port)
 EXPOSE 80
 
 # Start Nginx (default command for this image, but good to know)
 CMD ["nginx", "-g", "daemon off;"]
+

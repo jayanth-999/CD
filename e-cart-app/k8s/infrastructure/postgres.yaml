@@ -31,6 +31,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres
+  namespace: ecart
 spec:
   replicas: 1         # We only want 1 instance of the DB
   selector:

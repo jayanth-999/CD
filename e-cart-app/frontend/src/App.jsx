@@ -5,19 +5,34 @@ function App() {
   const [cart, setCart] = useState([])
 
   useEffect(() => {
-    // In a real app, fetch from backend
-    // fetch('http://localhost:3000/products').then(...)
-    setProducts([
-      { id: 1, name: 'Laptop', price: 999 },
-      { id: 2, name: 'Phone', price: 499 },
-      { id: 3, name: 'Headphones', price: 99 }
-    ])
+    // Fetch products from backend
+    const backendUrl = '/api'; // Nginx will proxy /api to backend
+    fetch(`${backendUrl}/products`)
+      .then(res => res.json())
+      .then(data => setProducts(data))
+      .catch(err => {
+        console.error('Failed to fetch products:', err);
+        // Fallback to mock data
+        setProducts([
+          { id: 1, name: 'Laptop', price: 999 },
+          { id: 2, name: 'Phone', price: 499 },
+          { id: 3, name: 'Headphones', price: 99 }
+        ]);
+      });
   }, [])
 
   const addToCart = (product) => {
     setCart([...cart, product])
-    // In a real app, send order to backend (which sends to Kafka)
-    console.log('Added to cart:', product)
+    // Send order to backend
+    const backendUrl = '/api';
+    fetch(`${backendUrl}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId: product.id, userId: 1 })
+    })
+      .then(res => res.json())
+      .then(data => console.log('Order placed:', data))
+      .catch(err => console.error('Order failed:', err));
   }
 
   return (

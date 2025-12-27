@@ -5,12 +5,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
+  namespace: ecart
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: frontend
-      namespace: ecart
   template:
     metadata:
       labels:
