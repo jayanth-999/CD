@@ -1,0 +1,104 @@
+# ==================================
+# E-Cart Helm Values
+# ==================================
+# This single file controls ALL deployment configurations
+
+# Global settings
+global:
+  namespace: ecart
+  imagePullPolicy: Never  # For local Kind cluster
+
+# Backend configuration
+backend:
+  enabled: true
+  name: backend
+  replicaCount: 2
+  image:
+    repository: e-cart-app-backend
+    tag: latest
+  service:
+    type: ClusterIP
+    port: 3000
+  env:
+    DB_HOST: postgres
+    DB_USER: user
+    DB_PASSWORD: password
+    DB_NAME: ecart
+    KAFKA_BROKER: kafka:9092
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  healthCheck:
+    liveness:
+      path: /health
+      port: 3000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+
+# Frontend configuration
+frontend:
+  enabled: true
+  name: frontend
+  replicaCount: 1
+  image:
+    repository: e-cart-app-frontend
+    tag: latest
+  service:
+    type: NodePort
+    port: 80
+    nodePort: 30007
+
+# PostgreSQL configuration
+postgres:
+  enabled: true
+  name: postgres
+  image:
+    repository: postgres
+    tag: 15-alpine
+  service:
+    port: 5432
+  env:
+    POSTGRES_USER: user
+    POSTGRES_PASSWORD: password
+    POSTGRES_DB: ecart
+  persistence:
+    enabled: false  # Set to true for production
+
+# Kafka configuration
+kafka:
+  enabled: true
+  name: kafka
+  image:
+    repository: confluentinc/cp-kafka
+    tag: 7.4.0
+  service:
+    port: 9092
+  env:
+    KAFKA_BROKER_ID: "1"
+    KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+    KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+    KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+    KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+    KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+# Zookeeper configuration
+zookeeper:
+  enabled: true
+  name: zookeeper
+  image:
+    repository: confluentinc/cp-zookeeper
+    tag: 7.4.0
+  service:
+    port: 2181
+  env:
+    ZOOKEEPER_CLIENT_PORT: "2181"
+    ZOOKEEPER_TICK_TIME: "2000"
+
+# Environment-specific overrides
+# Usage: helm install ecart ./helm -f helm/values-prod.yml
